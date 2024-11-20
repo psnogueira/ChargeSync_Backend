@@ -46,6 +46,7 @@ db.serialize(() => {
     end_time TEXT,
     energy_used REAL,  -- Quantidade de energia consumida durante a sessão
     status TEXT NOT NULL,  -- Status da recarga (em andamento, concluída, etc.)
+    progress REAL DEFAULT 0,  -- Progresso da recarga em porcentagem (0 a 100)
     FOREIGN KEY (userId) REFERENCES users(id),
     FOREIGN KEY (stationId) REFERENCES stations(id)
   )`);

@@ -21,6 +21,9 @@ router.post('/charges', authMiddleware, chargeController.createCharge);
 // Rota para atualizar uma sessão de recarga existente
 router.put('/charges/:id', authMiddleware, chargeController.updateCharge);
 
+// Rota para atualizar o progresso de uma sessão de recarga
+router.put('/charges/:chargeId/progress', authMiddleware, chargeController.updateChargeProgress);
+
 // Rota para deletar uma sessão de recarga
 router.delete('/charges/:id', authMiddleware, chargeController.deleteCharge);
 
