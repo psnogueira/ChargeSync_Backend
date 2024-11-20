@@ -65,7 +65,30 @@ exports.getChargesByUserId = (req, res) => {
         data: rows
       });
     });
-  };
+};
+
+// Função para obter o histórico de recargas de um usuário (somente sessões concluídas)
+exports.getChargeHistoryByUserId = (req, res) => {
+  const { userId } = req.params;  // Pegando o userId dos parâmetros da URL
+  const sql = `
+    SELECT * FROM charges 
+    WHERE userId = ? 
+    AND end_time IS NOT NULL
+  `;
+
+  db.all(sql, [userId], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Nenhuma sessão de recarga concluída encontrada para este usuário' });
+    }
+    res.json({
+      message: 'Sucesso',
+      data: rows
+    });
+  });
+};
 
 // Função para criar uma nova sessão de recarga
 exports.createCharge = (req, res) => {

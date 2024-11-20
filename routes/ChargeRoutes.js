@@ -12,6 +12,9 @@ router.get('/charges/:id', authMiddleware, chargeController.getChargeById);
 // Rota para obter todas as sessões de recarga de um usuário específico
 router.get('/users/:userId/charges', authMiddleware, chargeController.getChargesByUserId);
 
+// Rota para obter o histórico de recargas de um usuário (somente sessões concluídas)
+router.get('/users/:userId/charges/history', authMiddleware, chargeController.getChargeHistoryByUserId);
+
 // Rota para criar uma nova sessão de recarga
 router.post('/charges', authMiddleware, chargeController.createCharge);
 
