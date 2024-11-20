@@ -182,4 +182,25 @@ router.post('/login', (req, res) => {
     });
 });
 
+// Endpoint para buscar o ID do usuário pelo nome
+router.get('/users/name/:username', (req, res) => {
+    const { username } = req.params;
+  
+    // Consulta SQL para buscar o ID do usuário
+    const query = `SELECT id FROM users WHERE username = ?`;
+  
+    db.get(query, [username], (err, row) => {
+      if (err) {
+        console.error('Erro ao consultar o banco de dados:', err.message);
+        return res.status(500).json({ error: 'Erro interno no servidor' });
+      }
+  
+      if (!row) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+  
+      return res.json({ id: row.id });
+    });
+  });
+
 module.exports = router;

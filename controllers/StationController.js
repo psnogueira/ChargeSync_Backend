@@ -70,6 +70,43 @@ exports.updateStation = (req, res) => {
   });
 };
 
+// Função para atualizar a disponibilidade de uma estação
+exports.updateStationAvailability = (req, res) => {
+  const { stationId } = req.params; // ID da estação a ser alterada
+  const { available } = req.body;   // Valor de available (1 ou 0)
+
+  // Verificar se o valor de "available" é válido (deve ser 0 ou 1)
+  if (available !== 0 && available !== 1) {
+    return res.status(400).json({ message: 'O campo "available" deve ser 0 ou 1.' });
+  }
+
+  // SQL para atualizar o campo "available" da estação
+  const sql = `
+    UPDATE stations
+    SET available = ?
+    WHERE id = ?
+  `;
+  const params = [available, stationId];
+
+  // Executar a consulta no banco de dados
+  db.run(sql, params, function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    // Verifica se alguma linha foi alterada
+    if (this.changes === 0) {
+      return res.status(404).json({ message: 'Estação não encontrada' });
+    }
+
+    // Resposta de sucesso
+    res.json({
+      message: 'Disponibilidade da estação atualizada com sucesso',
+      data: { stationId, available }
+    });
+  });
+};
+
 // Função para deletar uma estação
 exports.deleteStation = (req, res) => {
   const { id } = req.params;

@@ -15,6 +15,9 @@ router.post('/stations', authMiddleware, stationController.createStation);
 // Rota para atualizar uma estação existente
 router.put('/stations/:id', authMiddleware, stationController.updateStation);
 
+// Rota para atualizar a disponibilidade de uma estação
+router.put('/stations/:stationId/available', authMiddleware, stationController.updateStationAvailability);
+
 // Rota para deletar uma estação
 router.delete('/stations/:id', authMiddleware, stationController.deleteStation);
 

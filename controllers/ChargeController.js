@@ -119,28 +119,56 @@ exports.createCharge = (req, res) => {
     return res.status(400).json({ message: 'Todos os campos userId, stationId, start_time e status são obrigatórios.' });
   }
 
-  // Inserir a nova sessão de recarga com progress inicial 0 e end_time como NULL
-  const sql = `
-    INSERT INTO charges (userId, stationId, start_time, status, progress, end_time) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-  const params = [userId, stationId, start_time, status, 0, null]; // Progress começa em 0, end_time é NULL
-
-  db.run(sql, params, function(err) {
+  // Verificar se a estação está disponível (available = 1)
+  const checkStationSql = 'SELECT available FROM stations WHERE id = ?';
+  
+  db.get(checkStationSql, [stationId], (err, row) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({
-      message: 'Sessão de recarga criada com sucesso',
-      data: { 
-        id: this.lastID, 
-        userId, 
-        stationId, 
-        start_time, 
-        status, 
-        progress: 0,
-        end_time: null
+
+    // Se a estação não for encontrada ou não estiver disponível
+    if (!row) {
+      return res.status(404).json({ message: 'Estação não encontrada.' });
+    }
+    
+    if (row.available !== 1) {
+      return res.status(400).json({ message: 'Estação não disponível para recarga.' });
+    }
+
+    // Inserir a nova sessão de recarga com progress inicial 0 e end_time como NULL
+    const insertChargeSql = `
+      INSERT INTO charges (userId, stationId, start_time, status, progress, end_time) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const chargeParams = [userId, stationId, start_time, status, 0, null]; // Progress começa em 0, end_time é NULL
+
+    db.run(insertChargeSql, chargeParams, function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
       }
+
+      // Atualizar o campo "available" da estação para 0 (indisponível)
+      const updateStationSql = 'UPDATE stations SET available = 0 WHERE id = ?';
+      db.run(updateStationSql, [stationId], function(err) {
+        if (err) {
+          return res.status(500).json({ error: 'Erro ao atualizar a disponibilidade da estação.' });
+        }
+
+        // Retornar resposta de sucesso com os dados da nova sessão de recarga
+        res.json({
+          message: 'Sessão de recarga criada com sucesso e estação marcada como indisponível',
+          data: { 
+            id: this.lastID, 
+            userId, 
+            stationId, 
+            start_time, 
+            status, 
+            progress: 0,
+            end_time: null
+          }
+        });
+      });
     });
   });
 };
@@ -166,7 +194,7 @@ exports.updateCharge = (req, res) => {
       updates.push('status = ?');
       params.push('concluído');
       updates.push('end_time = ?');
-      params.push(new Date().toISOString());  // Definindo o horário atual no formato ISO
+      params.push(new Date().toISOString());
     }
   }
 
@@ -210,6 +238,7 @@ exports.updateCharge = (req, res) => {
   `;
   params.push(id);
 
+  // Executar a atualização da sessão de recarga
   db.run(sql, params, function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -217,7 +246,21 @@ exports.updateCharge = (req, res) => {
     if (this.changes === 0) {
       return res.status(404).json({ message: 'Sessão de recarga não encontrada' });
     }
-    res.json({ message: 'Sessão de recarga atualizada com sucesso' });
+
+    // Se o progresso foi atualizado para 100, também atualizar o campo "available" da estação
+    if (progress === 100 && stationId) {
+      const updateStationSql = 'UPDATE stations SET available = 1 WHERE id = ?';
+      db.run(updateStationSql, [stationId], function (err) {
+        if (err) {
+          return res.status(500).json({ error: 'Erro ao atualizar a disponibilidade da estação.' });
+        }
+        // Retornar a mensagem de sucesso após atualizar a sessão e a estação
+        return res.json({ message: 'Sessão de recarga atualizada com sucesso e a estação está agora disponível.' });
+      });
+    } else {
+      // Se o progresso não foi 100, apenas retornar a mensagem de sucesso da atualização da sessão
+      res.json({ message: 'Sessão de recarga atualizada com sucesso' });
+    }
   });
 };
 
@@ -248,11 +291,34 @@ exports.updateChargeProgress = (req, res) => {
       if (this.changes === 0) {
         return res.status(404).json({ message: 'Sessão de recarga não encontrada' });
       }
-      res.json({ 
-        message: 'Recarga concluída com sucesso', 
-        progress: 100, 
-        status: 'concluído', 
-        end_time: endTime 
+
+      // Após atualizar a sessão, buscar o stationId associado a essa sessão de recarga
+      const getStationIdSql = 'SELECT stationId FROM charges WHERE id = ?';
+      db.get(getStationIdSql, [chargeId], (err, row) => {
+        if (err) {
+          return res.status(500).json({ error: 'Erro ao buscar a estação associada.' });
+        }
+        if (!row) {
+          return res.status(404).json({ message: 'Estação associada à sessão de recarga não encontrada.' });
+        }
+
+        const stationId = row.stationId;
+
+        // Atualizar o campo "available" da estação para 1 (disponível)
+        const updateStationSql = 'UPDATE stations SET available = 1 WHERE id = ?';
+        db.run(updateStationSql, [stationId], function (err) {
+          if (err) {
+            return res.status(500).json({ error: 'Erro ao atualizar a disponibilidade da estação.' });
+          }
+
+          // Retornar a mensagem de sucesso após atualizar a sessão e a estação
+          res.json({
+            message: 'Recarga concluída com sucesso e a estação está agora disponível',
+            progress: 100,
+            status: 'concluído',
+            end_time: endTime
+          });
+        });
       });
     });
   } else {
