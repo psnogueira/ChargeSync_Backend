@@ -23,7 +23,7 @@ Este é o backend do aplicativo **ChargeSync**, desenvolvido como parte de uma s
    ```
 2. Navegue para o diretório:
    ```bash
-   cd station-manager-backend
+   cd ChargeSync_App
    ```
 3. Instale as dependências:
    ```bash
