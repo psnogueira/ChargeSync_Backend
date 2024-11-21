@@ -10,7 +10,7 @@ router.get('/users/:userId/preferences', authMiddleware, userPreferencesControll
 router.get('/preferences/:id', authMiddleware, userPreferencesController.getUserPreferenceById);
 
 // Rota para criar novas preferências de usuário
-router.post('/users/:userId/preferences', authMiddleware, userPreferencesController.createUserPreferences);
+router.post('/users/:userId/preferences', userPreferencesController.createUserPreferences);
 
 // Atualiza uma preferência de usuário com base no ID da preferência
 router.put('/preferences/:id', authMiddleware, userPreferencesController.updateUserPreferenceById);
