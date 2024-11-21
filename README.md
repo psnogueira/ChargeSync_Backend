@@ -29,7 +29,7 @@ Este é o backend do aplicativo **ChargeSync**, desenvolvido como parte de uma s
    ```bash
    npm install
    ```
-4. Instale as dependências:
+4. Inicie o servidor:
    ```bash
    node .\server.js
    ```
