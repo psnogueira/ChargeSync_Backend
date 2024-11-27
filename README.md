@@ -14,7 +14,7 @@ Este é o backend do aplicativo **ChargeSync**, desenvolvido como parte de uma s
 - **Node.js**
 - **SQLite** 
 
-## Como Rodar o Projeto
+## Como rodar o Projeto
 
 1. Clone o repositório:
    ```bash
