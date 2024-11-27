@@ -8,7 +8,6 @@ Este é o backend do aplicativo **ChargeSync**, desenvolvido como parte de uma s
 - API para autenticação de usuários.
 - Listagem de estações de recarga.
 - Gerenciamento do estado das estações (disponível ou em uso).
-- Integração com banco de dados.
 
 ## Tecnologias Utilizadas
 
